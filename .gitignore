@@ -1,0 +1,14 @@
+# Segredos
+.env
+
+# Dados de clientes (planilhas e relatórios gerados)
+*.xlsx
+relatorios/
+logs/
+
+# Específico da máquina
+run_diario.bat
+
+# Python
+__pycache__/
+*.pyc
