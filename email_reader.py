@@ -53,9 +53,9 @@ def buscar_emails_inss(inicio=None, fim=None):
     with imaplib.IMAP4_SSL(config.IMAP_HOST) as imap:
         imap.login(config.EMAIL_USER, config.EMAIL_PASSWORD)
         imap.select(config.PASTA, readonly=True)
-        _, dados = imap.search(None, f'(SINCE "{desde}")')
+        _, dados = imap.uid("SEARCH", None, f'(SINCE "{desde}")')
         for num in dados[0].split():
-            _, d = imap.fetch(num, "(RFC822)")
+            _, d = imap.uid("FETCH", num, "(BODY.PEEK[])")  # PEEK: não marca como lido ao ler
             msg = email.message_from_bytes(d[0][1])
             remetente = _decode(msg.get("From", ""))
             cabecalhos = " ".join(_decode(msg.get(h, "")) for h in ("From", "To", "Cc", "Delivered-To", "X-Original-To")).lower()
@@ -74,6 +74,7 @@ def buscar_emails_inss(inicio=None, fim=None):
             if (inicio or fim) and (data is None or (inicio and data < inicio) or (fim and data >= fim)):
                 continue
             resultados.append({
+                "uid": num.decode(),
                 "id": msg.get("Message-ID", "").strip(),
                 "data": data,
                 "remetente": remetente,
@@ -82,3 +83,16 @@ def buscar_emails_inss(inicio=None, fim=None):
                 "anexos": sum(1 for p in msg.walk() if p.get_content_disposition() == "attachment"),
             })
     return resultados
+
+
+def marcar_como_lidos(uids):
+    """Marca como lidos na caixa de entrada os e-mails que entraram no relatório."""
+    uids = [u for u in uids if u]
+    if not uids:
+        return 0
+    with imaplib.IMAP4_SSL(config.IMAP_HOST) as imap:
+        imap.login(config.EMAIL_USER, config.EMAIL_PASSWORD)
+        imap.select(config.PASTA)  # leitura e escrita
+        for uid in uids:
+            imap.uid("STORE", uid, "+FLAGS", r"(\Seen)")
+    return len(uids)

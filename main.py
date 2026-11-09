@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime, date, time, timedelta
 
 import config
-from email_reader import buscar_emails_inss
+from email_reader import buscar_emails_inss, marcar_como_lidos
 from summarizer import processar
 from excel_writer import salvar
 from mailer import enviar_resumo
@@ -34,6 +34,7 @@ def main():
     ap.add_argument("--inicio", help='manual, ex: "2026-11-08 07:00"')
     ap.add_argument("--fim", help='manual, ex: "2026-11-09 07:00"')
     ap.add_argument("--excel", help="arquivo Excel de saída")
+    ap.add_argument("--nao-marcar-lido", action="store_true", help="não marca os e-mails do relatório como lidos")
     ap.add_argument("--enviar-para", help="envia o resumo por e-mail para este endereço")
     a = ap.parse_args()
 
@@ -67,6 +68,11 @@ def main():
         periodo = f"{inicio:%d/%m %H:%M} a {fim:%d/%m %H:%M}" if inicio and fim else "últimas 24h"
         enviar_resumo(registros, periodo, destino, excel)
         print(f"Resumo enviado para {destino}")
+
+    # Só marca como lido depois que o relatório foi gravado (e enviado, se for o caso)
+    if emails and not a.nao_marcar_lido and not a.sem_enviar:
+        n = marcar_como_lidos([e["uid"] for e in emails])
+        print(f"{n} e-mail(s) marcado(s) como lido(s) na caixa de entrada.")
 
 
 if __name__ == "__main__":

@@ -17,6 +17,8 @@ python main.py
 4. `powershell -ExecutionPolicy Bypass -File .\instalar_agendamento.ps1` instala as dependências e agenda 07:00 (seg a sex).
 5. No computador antigo, desative a tarefa `botmarina-resumo-INSS` (senão o e-mail sai duplicado).
 
+Depois de gravar (e enviar) o relatório, os e-mails que entraram nele são **marcados como lidos** na caixa de entrada (só esses; use `--nao-marcar-lido` para desligar; `--sem-enviar` também não marca).
+
 Regras do envio: terça a sexta = de ontem 07:00 a hoje 07:00; segunda = de sexta 07:00 a segunda 07:00. Fim de semana não envia.
 
 ## Estrutura
