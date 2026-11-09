@@ -10,6 +10,15 @@ copy .env.example .env     # preencha e-mail e senha de app
 python main.py
 ```
 
+## Mudando de computador
+1. Instale Python (python.org, marcando "Add Python to PATH") e Git.
+2. `git clone <repositorio>` e entre na pasta.
+3. Garanta o arquivo `.env` (e-mail + senha de app); ele não vai no repositório público.
+4. `powershell -ExecutionPolicy Bypass -File .\instalar_agendamento.ps1` instala as dependências e agenda 07:00 (seg a sex).
+5. No computador antigo, desative a tarefa `botmarina-resumo-INSS` (senão o e-mail sai duplicado).
+
+Regras do envio: terça a sexta = de ontem 07:00 a hoje 07:00; segunda = de sexta 07:00 a segunda 07:00. Fim de semana não envia.
+
 ## Estrutura
 - `config.py` – configurações e categorias por palavra-chave
 - `email_reader.py` – conecta no e-mail e filtra remetentes do INSS
