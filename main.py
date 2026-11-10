@@ -34,6 +34,7 @@ def main():
     ap.add_argument("--inicio", help='manual, ex: "2026-11-08 07:00"')
     ap.add_argument("--fim", help='manual, ex: "2026-11-09 07:00"')
     ap.add_argument("--excel", help="arquivo Excel de saída")
+    ap.add_argument("--so-nao-lidos", action="store_true", help="considera apenas e-mails ainda não lidos")
     ap.add_argument("--nao-marcar-lido", action="store_true", help="não marca os e-mails do relatório como lidos")
     ap.add_argument("--enviar-para", help="envia o resumo por e-mail para este endereço")
     a = ap.parse_args()
@@ -58,7 +59,7 @@ def main():
         fim = datetime.strptime(a.fim, fmt) if a.fim else None
         excel = a.excel or config.ARQUIVO_EXCEL
 
-    emails = buscar_emails_inss(inicio, fim)
+    emails = buscar_emails_inss(inicio, fim, a.so_nao_lidos)
     print(f"Janela: {inicio} -> {fim} | {len(emails)} e-mail(s) do INSS encontrados.")
     registros = sorted((processar(e) for e in emails), key=lambda r: r["Data E-mail"] or datetime.min.date())
     novos = salvar(registros, excel)

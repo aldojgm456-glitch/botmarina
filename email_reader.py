@@ -9,13 +9,20 @@ import html
 import config
 
 
+def _bytes_para_texto(dados, charset):
+    try:
+        return dados.decode(charset or "utf-8", errors="replace")
+    except LookupError:  # ex: "unknown-8bit"
+        return dados.decode("utf-8", errors="replace")
+
+
 def _decode(valor):
     if not valor:
         return ""
     partes = []
     for texto, charset in decode_header(valor):
         if isinstance(texto, bytes):
-            texto = texto.decode(charset or "utf-8", errors="replace")
+            texto = _bytes_para_texto(texto, charset)
         partes.append(texto)
     return "".join(partes)
 
@@ -30,7 +37,7 @@ def _corpo(msg):
             continue
         if tipo in ("text/plain", "text/html"):
             payload = p.get_payload(decode=True) or b""
-            conteudo = payload.decode(p.get_content_charset() or "utf-8", errors="replace")
+            conteudo = _bytes_para_texto(payload, p.get_content_charset())
             if tipo == "text/plain":
                 texto += conteudo
             else:
@@ -42,7 +49,7 @@ def _corpo(msg):
     return re.sub(r"\s+", " ", html.unescape(limpo)).strip()
 
 
-def buscar_emails_inss(inicio=None, fim=None):
+def buscar_emails_inss(inicio=None, fim=None, so_nao_lidos=False):
     """Retorna os e-mails do INSS. Com inicio/fim (datetime local) filtra pela janela;
     sem eles, usa os últimos DIAS_ATRAS dias."""
     if inicio:
@@ -53,7 +60,7 @@ def buscar_emails_inss(inicio=None, fim=None):
     with imaplib.IMAP4_SSL(config.IMAP_HOST) as imap:
         imap.login(config.EMAIL_USER, config.EMAIL_PASSWORD)
         imap.select(config.PASTA, readonly=True)
-        _, dados = imap.uid("SEARCH", None, f'(SINCE "{desde}")')
+        _, dados = imap.uid("SEARCH", None, f'(UNSEEN SINCE "{desde}")' if so_nao_lidos else f'(SINCE "{desde}")')
         for num in dados[0].split():
             _, d = imap.uid("FETCH", num, "(BODY.PEEK[])")  # PEEK: não marca como lido ao ler
             msg = email.message_from_bytes(d[0][1])
